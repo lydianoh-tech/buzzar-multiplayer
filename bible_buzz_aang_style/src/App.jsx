@@ -59,6 +59,9 @@ export default function App() {
   const isHost = room?.hostId === socket.id;
   const leaderboard = useMemo(() => [...(room?.players || [])].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)), [room]);
   const answered = Boolean(me?.answered);
+  // Question numbering restarts at 1 for each new round.
+  const currentRound = room ? Math.floor(room.round / 5) + 1 : 1;
+  const questionInRound = room ? (room.round % 5) + 1 : 1;
 
   function createRoom(e) {
     e.preventDefault(); setError(""); setNotice("");
@@ -161,7 +164,7 @@ export default function App() {
       </section>
     </section> : <section className="game-layout">
       <div className="game-main">
-        <div className="room-banner"><div><span className="eyebrow">GAME ROOM</span><h2>{room.status === "lobby" ? "Waiting room" : room.status === "finished" ? "Game complete" : `Round ${Math.min(Math.floor(room.round / 5) + 1, 5)} of 5`}</h2></div><button className="secondary-btn" onClick={copyInvite}>↗ Share invite</button></div>
+        <div className="room-banner"><div><span className="eyebrow">GAME ROOM</span><h2>{room.status === "lobby" ? "Waiting room" : room.status === "finished" ? "Game complete" : `Round ${Math.min(currentRound, 5)} of 5`}</h2></div><button className="secondary-btn" onClick={copyInvite}>↗ Share invite</button></div>
         <div className="room-code-panel"><span>ROOM CODE</span><strong>{roomCode}</strong><button onClick={copyInvite} aria-label="Copy invite">Copy invite ↗</button></div>
         {room.status === "lobby" && <div className="question-card lobby-card">
           <div className="card-icon">✦</div><div className="eyebrow">GATHER YOUR PLAYERS</div><h1>Let the fellowship begin.</h1><p>Share the room code with your friends. The host can start when at least two players have joined.</p>
@@ -178,7 +181,7 @@ export default function App() {
           {notice && <p className="notice-msg">{notice}</p>}
         </div>}
         {room.status === "between" && <div className="question-card result-card">
-          <div className="result-symbol">✓</div><div className="eyebrow">{(room.round % 5) === 4 ? `ROUND ${Math.floor(room.round / 5) + 1} COMPLETE` : `QUESTION ${(room.round % 5) + 1} COMPLETE`}</div><h1>{room.answerReveal?.message || "Question complete!"}</h1>
+          <div className="result-symbol">✓</div><div className="eyebrow">{(room.round % 5) === 4 ? `ROUND ${Math.min(currentRound, 5)} COMPLETE` : `QUESTION ${questionInRound} COMPLETE`}</div><h1>{room.answerReveal?.message || "Question complete!"}</h1>
           <p>Correct answer: <strong>{room.question?.options[room.answerReveal?.correctIndex]}</strong></p><p className="scripture-ref">Read more: {room.answerReveal?.reference}</p>
           {isHost ? <button className="primary-btn" onClick={nextRound}>{(room.round % 5) === 4 ? "Next round →" : "Next question →"}</button> : <div className="waiting-pill"><span className="pulse"/> Waiting for host to continue…</div>}
         </div>}

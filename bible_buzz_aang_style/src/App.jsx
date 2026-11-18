@@ -21,10 +21,10 @@ const avatarColors = [
 const initialRules = [
   "Create a room and share the five-character code with friends.",
   "At least 2 players are required; up to 12 can join before the host starts.",
-  "There are 5 rounds. Each question stays open for up to 20 seconds.",
+  "There are 5 rounds with 5 questions each (25 questions total). Each question stays open for up to 20 seconds.",
   "Each player gets one answer per question. The first correct answer earns 100 points.",
   "Incorrect answers earn 0 points. If nobody answers correctly, the timer reveals the answer.",
-  "The highest total score after Round 5 wins. Ties share the top spot."
+  "The highest total score after all 5 rounds (25 questions) wins. Ties share the top spot."
 ];
 
 export default function App() {
@@ -161,26 +161,26 @@ export default function App() {
       </section>
     </section> : <section className="game-layout">
       <div className="game-main">
-        <div className="room-banner"><div><span className="eyebrow">GAME ROOM</span><h2>{room.status === "lobby" ? "Waiting room" : room.status === "finished" ? "Game complete" : `Round ${Math.min(room.round + 1, 5)} of 5`}</h2></div><button className="secondary-btn" onClick={copyInvite}>↗ Share invite</button></div>
+        <div className="room-banner"><div><span className="eyebrow">GAME ROOM</span><h2>{room.status === "lobby" ? "Waiting room" : room.status === "finished" ? "Game complete" : `Round ${Math.min(Math.floor(room.round / 5) + 1, 5)} of 5`}</h2></div><button className="secondary-btn" onClick={copyInvite}>↗ Share invite</button></div>
         <div className="room-code-panel"><span>ROOM CODE</span><strong>{roomCode}</strong><button onClick={copyInvite} aria-label="Copy invite">Copy invite ↗</button></div>
         {room.status === "lobby" && <div className="question-card lobby-card">
           <div className="card-icon">✦</div><div className="eyebrow">GATHER YOUR PLAYERS</div><h1>Let the fellowship begin.</h1><p>Share the room code with your friends. The host can start when at least two players have joined.</p>
           <div className="waiting-count">{room.players.length} / 12 players joined</div>
-          {isHost ? <button className="primary-btn" onClick={startGame} disabled={room.players.length < 2}>Start 5-round game →</button> : <div className="waiting-pill"><span className="pulse" /> Waiting for host to start…</div>}
+          {isHost ? <button className="primary-btn" onClick={startGame} disabled={room.players.length < 2}>Start 5-round game (25 questions) →</button> : <div className="waiting-pill"><span className="pulse" /> Waiting for host to start…</div>}
         </div>}
         {room.status === "playing" && room.question && <div className="question-card">
           <div className="question-meta"><span className="category-pill">{room.question.category}</span><span className={`timer ${room.secondsLeft <= 5 ? "urgent" : ""}`}>◷ {room.secondsLeft}s</span></div>
-          <div className="round-progress">{Array.from({length:5}, (_, i) => <span key={i} className={i <= room.round ? "filled" : ""}/>)}</div>
-          <div className="eyebrow">QUESTION {room.round + 1} / 5</div>
+          <div className="round-progress">{Array.from({length:5}, (_, i) => <span key={i} className={i <= Math.floor(room.round / 5) ? "filled" : ""}/>)}</div>
+          <div className="eyebrow">ROUND {Math.floor(room.round / 5) + 1} OF 5 · QUESTION {(room.round % 5) + 1} OF 5</div>
           <h1>{room.question.question}</h1>
           <div className="answer-grid">{room.question.options.map((option, i) => <button key={option} className="answer-btn" disabled={answered} onClick={() => submitAnswer(i)}><span>{String.fromCharCode(65+i)}</span>{option}</button>)}</div>
           {answered && <p className="answer-note">Answer locked in — watch the scoreboard!</p>}
           {notice && <p className="notice-msg">{notice}</p>}
         </div>}
         {room.status === "between" && <div className="question-card result-card">
-          <div className="result-symbol">✓</div><div className="eyebrow">ROUND {room.round + 1} COMPLETE</div><h1>{room.answerReveal?.message || "Round complete!"}</h1>
+          <div className="result-symbol">✓</div><div className="eyebrow">{(room.round % 5) === 4 ? `ROUND ${Math.floor(room.round / 5) + 1} COMPLETE` : `QUESTION ${(room.round % 5) + 1} COMPLETE`}</div><h1>{room.answerReveal?.message || "Question complete!"}</h1>
           <p>Correct answer: <strong>{room.question?.options[room.answerReveal?.correctIndex]}</strong></p><p className="scripture-ref">Read more: {room.answerReveal?.reference}</p>
-          {isHost ? <button className="primary-btn" onClick={nextRound}>Next round →</button> : <div className="waiting-pill"><span className="pulse"/> Waiting for host to continue…</div>}
+          {isHost ? <button className="primary-btn" onClick={nextRound}>{(room.round % 5) === 4 ? "Next round →" : "Next question →"}</button> : <div className="waiting-pill"><span className="pulse"/> Waiting for host to continue…</div>}
         </div>}
         {room.status === "finished" && <div className="question-card result-card final-card">
           <div className="result-symbol">♛</div><div className="eyebrow">FINAL SCORE</div><h1>{leaderboard[0]?.name ? `${leaderboard[0].name} wins!` : "Game complete!"}</h1><p>Congratulations to every player who joined the challenge.</p>

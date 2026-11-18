@@ -44,3 +44,23 @@ button, .join-card, .question-card, .score-panel, .rules-card { -webkit-tap-high
 @keyframes result-pop { from { transform:scale(.6) rotate(-12deg); opacity:0; } to { transform:scale(1) rotate(0); opacity:1; } }
 @media (max-width:520px) { .avatar-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } .avatar-builder { padding:13px; } .hero-orbit { width:100px;height:100px;right:0;top:12px;opacity:.65; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important; } }
+
+
+/* Human avatar choices and champion victory dance */
+.avatar-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.avatar-choice { font-size: 31px; }
+.avatar-preview { font-size: 42px; }
+.winner-celebration { width: min(100%, 440px); position: relative; margin-top: 6px; }
+.dance-stage { height: 174px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; isolation: isolate; }
+.dance-stage::before { content: ""; position: absolute; width: 142px; height: 28px; left: 50%; bottom: 13px; transform: translateX(-50%); border-radius: 50%; background: #b9e47a18; filter: blur(5px); }
+.winner-dancer { position: relative; z-index: 2; display: grid; place-items: center; width: 92px; height: 106px; border-radius: 30px; font-size: 70px; background: radial-gradient(circle at 50% 40%, color-mix(in srgb,var(--avatar-color) 23%,#163a2a),#0c241b 72%); border: 1px solid color-mix(in srgb,var(--avatar-color) 65%,transparent); box-shadow: 0 0 34px color-mix(in srgb,var(--avatar-color) 25%,transparent); animation: victory-dance .72s ease-in-out infinite alternate; transform-origin: 50% 80%; }
+.dance-spark { position: absolute; color: var(--green); text-shadow: 0 0 15px #b9e47a99; animation: spark-twinkle .9s ease-in-out infinite alternate; }
+.spark-one { left: 22%; top: 25px; font-size: 24px; } .spark-two { right: 21%; top: 38px; font-size: 29px; animation-delay: .3s; } .spark-three { right: 29%; bottom: 26px; font-size: 16px; animation-delay: .5s; }
+.dance-confetti { position: absolute; z-index: 1; width: 8px; height: 13px; border-radius: 2px; background: #f4c76b; animation: confetti-fall 1.5s ease-in-out infinite; }
+.confetti-one { left: 27%; top: 7px; transform: rotate(24deg); } .confetti-two { left: 37%; top: 29px; background: #f9a8d4; animation-delay: .4s; } .confetti-three { right: 31%; top: 9px; background: #7dd3fc; animation-delay: .7s; } .confetti-four { right: 23%; top: 55px; background: #c4b5fd; animation-delay: .2s; }
+.dance-caption { color: var(--green) !important; font-weight: 700; margin: 4px 0 10px !important; }
+@keyframes victory-dance { 0% { transform: translateY(3px) rotate(-9deg) scale(.98); } 30% { transform: translateY(-8px) rotate(8deg) scale(1.04); } 65% { transform: translateY(-2px) rotate(-7deg) scale(1.02); } 100% { transform: translateY(-11px) rotate(9deg) scale(1.05); } }
+@keyframes spark-twinkle { from { opacity: .45; transform: scale(.75) rotate(-12deg); } to { opacity: 1; transform: scale(1.2) rotate(12deg); } }
+@keyframes confetti-fall { 0% { opacity: 0; transform: translateY(-8px) rotate(0); } 35% { opacity: 1; } 100% { opacity: .1; transform: translateY(75px) rotate(190deg); } }
+@media(max-width:520px) { .avatar-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .winner-dancer { width: 82px; height: 96px; font-size: 62px; } }
+@media(prefers-reduced-motion:reduce) { .winner-dancer,.dance-spark,.dance-confetti { animation:none !important; } }

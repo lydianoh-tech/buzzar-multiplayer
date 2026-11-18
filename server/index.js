@@ -27,7 +27,7 @@ const questions = [
 const rooms = new Map();
 const timers = new Map();
 const cleanName = (s) => String(s || "").trim().replace(/[<>]/g, "").slice(0, 22);
-const allowedAvatars = new Set(["🦁", "🕊️", "👑", "🌟", "🦋", "🌻", "🧑🏽‍🦱", "👩🏾‍🦰", "🧔🏻", "👩🏻‍🦳", "🧑🏿‍🦲", "🐑"]);
+const allowedAvatars = new Set(["🧍🏻‍♀️", "🧍🏼‍♀️", "🧍🏽‍♀️", "🧍🏾‍♀️", "🧍🏿‍♀️", "🧍🏻‍♂️", "🧍🏼‍♂️", "🧍🏽‍♂️", "🧍🏾‍♂️", "🧍🏿‍♂️", "🧍🏻", "🧍🏼", "🧍🏽", "🧍🏾", "🧍🏿", "🧍‍♀️"]);
 const allowedAvatarColors = new Set(["#b9e47a", "#f4c76b", "#7dd3fc", "#f9a8d4", "#c4b5fd", "#fda58b"]);
 const cleanAvatar = (value) => allowedAvatars.has(value) ? value : "🦁";
 const cleanAvatarColor = (value) => allowedAvatarColors.has(value) ? value : "#b9e47a";

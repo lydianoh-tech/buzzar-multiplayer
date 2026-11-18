@@ -3,12 +3,14 @@ import { io } from "socket.io-client";
 
 const socket = io(import.meta.env.VITE_SERVER_URL || "/", { autoConnect: true });
 const avatarChoices = [
-  { icon: "🦁", label: "Lion" }, { icon: "🕊️", label: "Dove" },
-  { icon: "👑", label: "Royal" }, { icon: "🌟", label: "Star" },
-  { icon: "🦋", label: "Butterfly" }, { icon: "🌻", label: "Sunflower" },
-  { icon: "🧑🏽‍🦱", label: "Curly" }, { icon: "👩🏾‍🦰", label: "Red curls" },
-  { icon: "🧔🏻", label: "Beard" }, { icon: "👩🏻‍🦳", label: "Silver" },
-  { icon: "🧑🏿‍🦲", label: "Bold" }, { icon: "🐑", label: "Lamb" }
+  { icon: "🧍🏻‍♀️", label: "Woman, light skin" }, { icon: "🧍🏼‍♀️", label: "Woman, medium-light skin" },
+  { icon: "🧍🏽‍♀️", label: "Woman, medium skin" }, { icon: "🧍🏾‍♀️", label: "Woman, medium-dark skin" },
+  { icon: "🧍🏿‍♀️", label: "Woman, dark skin" }, { icon: "🧍🏻‍♂️", label: "Man, light skin" },
+  { icon: "🧍🏼‍♂️", label: "Man, medium-light skin" }, { icon: "🧍🏽‍♂️", label: "Man, medium skin" },
+  { icon: "🧍🏾‍♂️", label: "Man, medium-dark skin" }, { icon: "🧍🏿‍♂️", label: "Man, dark skin" },
+  { icon: "🧍🏻", label: "Person, light skin" }, { icon: "🧍🏼", label: "Person, medium-light skin" },
+  { icon: "🧍🏽", label: "Person, medium skin" }, { icon: "🧍🏾", label: "Person, medium-dark skin" },
+  { icon: "🧍🏿", label: "Person, dark skin" }, { icon: "🧍‍♀️", label: "Woman, default skin tone" }
 ];
 const avatarColors = [
   { name: "Lime", value: "#b9e47a" }, { name: "Gold", value: "#f4c76b" },
@@ -163,7 +165,11 @@ export default function App() {
         </div>}
         {room.status === "finished" && <div className="question-card result-card final-card">
           <div className="result-symbol">♛</div><div className="eyebrow">FINAL SCORE</div><h1>{leaderboard[0]?.name ? `${leaderboard[0].name} wins!` : "Game complete!"}</h1><p>Congratulations to every player who joined the challenge.</p>
-          <div className="final-winner"><span>✦</span><div><small>CHAMPION</small><strong>{leaderboard[0]?.name || "—"}</strong></div><b>{leaderboard[0]?.score ?? 0} pts</b></div>
+          <div className="winner-celebration" aria-label="Winner celebration">
+            <div className="dance-stage" aria-hidden="true"><span className="dance-spark spark-one">✦</span><span className="dance-spark spark-two">✧</span><span className="dance-spark spark-three">✦</span><span className="dance-confetti confetti-one"/><span className="dance-confetti confetti-two"/><span className="dance-confetti confetti-three"/><span className="dance-confetti confetti-four"/><span className="winner-dancer" style={{ "--avatar-color": leaderboard[0]?.avatarColor || "#b9e47a" }}>{leaderboard[0]?.avatar || "🧑🏽"}</span></div>
+            <div className="final-winner"><span>🏆</span><div><small>CHAMPION</small><strong>{leaderboard[0]?.name || "—"}</strong></div><b>{leaderboard[0]?.score ?? 0} pts</b></div>
+            <p className="dance-caption">🎉 Victory dance! What a champion! 🎉</p>
+          </div>
           <button className="secondary-btn" onClick={() => { setRoom(null); setRoomCode(""); setNotice(""); setError(""); }}>Back to home</button>
         </div>}
         {error && <p className="error-msg">{error}</p>}

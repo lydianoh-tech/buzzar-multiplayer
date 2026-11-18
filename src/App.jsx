@@ -161,7 +161,7 @@ export default function App() {
         {room.status === "between" && <div className="question-card result-card">
           <div className="result-symbol">✓</div><div className="eyebrow">ROUND {room.round + 1} COMPLETE</div><h1>{room.answerReveal?.message || "Round complete!"}</h1>
           <p>Correct answer: <strong>{room.question?.options[room.answerReveal?.correctIndex]}</strong></p><p className="scripture-ref">Read more: {room.answerReveal?.reference}</p>
-          {isHost ? <button className="primary-btn" onClick={nextRound}>Next round →</button> : <div className="waiting-pill"><span className="pulse"/> Waiting for host to continue…</div>}
+          {isHost ? <button className="primary-btn" onClick={nextRound}>Next Question→</button> : <div className="waiting-pill"><span className="pulse"/> Waiting for host to continue…</div>}
         </div>}
         {room.status === "finished" && <div className="question-card result-card final-card">
           <div className="result-symbol">♛</div><div className="eyebrow">FINAL SCORE</div><h1>{leaderboard[0]?.name ? `${leaderboard[0].name} wins!` : "Game complete!"}</h1><p>Congratulations to every player who joined the challenge.</p>

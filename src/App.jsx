@@ -2,6 +2,20 @@ import { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 
 const socket = io(import.meta.env.VITE_SERVER_URL || "/", { autoConnect: true });
+const avatarChoices = [
+  { icon: "🦁", label: "Lion" }, { icon: "🕊️", label: "Dove" },
+  { icon: "👑", label: "Royal" }, { icon: "🌟", label: "Star" },
+  { icon: "🦋", label: "Butterfly" }, { icon: "🌻", label: "Sunflower" },
+  { icon: "🧑🏽‍🦱", label: "Curly" }, { icon: "👩🏾‍🦰", label: "Red curls" },
+  { icon: "🧔🏻", label: "Beard" }, { icon: "👩🏻‍🦳", label: "Silver" },
+  { icon: "🧑🏿‍🦲", label: "Bold" }, { icon: "🐑", label: "Lamb" }
+];
+const avatarColors = [
+  { name: "Lime", value: "#b9e47a" }, { name: "Gold", value: "#f4c76b" },
+  { name: "Sky", value: "#7dd3fc" }, { name: "Rose", value: "#f9a8d4" },
+  { name: "Lavender", value: "#c4b5fd" }, { name: "Coral", value: "#fda58b" }
+];
+
 const initialRules = [
   "Create a room and share the five-character code with friends.",
   "At least 2 players are required; up to 12 can join before the host starts.",
@@ -13,6 +27,8 @@ const initialRules = [
 
 export default function App() {
   const [name, setName] = useState("");
+  const [avatar, setAvatar] = useState(() => localStorage.getItem("bibleBuzzAvatar") || "🦁");
+  const [avatarColor, setAvatarColor] = useState(() => localStorage.getItem("bibleBuzzAvatarColor") || "#b9e47a");
   const [codeInput, setCodeInput] = useState("");
   const [room, setRoom] = useState(null);
   const [roomCode, setRoomCode] = useState("");
@@ -37,14 +53,18 @@ export default function App() {
 
   function createRoom(e) {
     e.preventDefault(); setError(""); setNotice("");
-    socket.emit("room:create", { name }, result => {
+    localStorage.setItem("bibleBuzzAvatar", avatar);
+    localStorage.setItem("bibleBuzzAvatarColor", avatarColor);
+    socket.emit("room:create", { name, avatar, avatarColor }, result => {
       if (result?.error) return setError(result.error);
       setRoomCode(result.code); setRoom(result.state);
     });
   }
   function joinRoom(e) {
     e.preventDefault(); setError(""); setNotice("");
-    socket.emit("room:join", { name, code: codeInput }, result => {
+    localStorage.setItem("bibleBuzzAvatar", avatar);
+    localStorage.setItem("bibleBuzzAvatarColor", avatarColor);
+    socket.emit("room:join", { name, code: codeInput, avatar, avatarColor }, result => {
       if (result?.error) return setError(result.error);
       setRoomCode(result.code); setRoom(result.state);
     });
@@ -82,6 +102,7 @@ export default function App() {
 
     {!room ? <section className="landing">
       <div className="hero-copy">
+        <div className="hero-orbit" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span></div>
         <div className="eyebrow">SCRIPTURE • SPEED • FRIENDSHIP</div>
         <h1>Know the Word.<br/><em>Beat the buzzer.</em></h1>
         <p className="hero-description">A live Bible trivia challenge for friends, family, and fellowship. Join from anywhere and see who knows their Scripture best.</p>
@@ -89,6 +110,19 @@ export default function App() {
       </div>
       <div className="join-card">
         <div className="card-icon">✧</div><h2>Ready to play?</h2><p>Choose a name, then host a game or join a friend.</p>
+        <div className="avatar-builder">
+          <div className="avatar-builder-heading">
+            <div><span className="eyebrow">MAKE IT YOURS</span><h3>Choose your avatar</h3></div>
+            <div className="avatar-preview" style={{ "--avatar-color": avatarColor }}>{avatar}</div>
+          </div>
+          <div className="avatar-grid" role="group" aria-label="Choose an avatar">
+            {avatarChoices.map(choice => <button type="button" key={choice.icon} title={choice.label} aria-label={choice.label} aria-pressed={avatar === choice.icon} className={`avatar-choice ${avatar === choice.icon ? "selected" : ""}`} onClick={() => setAvatar(choice.icon)}>{choice.icon}</button>)}
+          </div>
+          <div className="color-picker-label">AVATAR GLOW</div>
+          <div className="avatar-colors" role="group" aria-label="Choose avatar color">
+            {avatarColors.map(color => <button type="button" key={color.value} title={color.name} aria-label={`${color.name} avatar glow`} aria-pressed={avatarColor === color.value} className={`color-choice ${avatarColor === color.value ? "selected" : ""}`} style={{ "--swatch": color.value }} onClick={() => setAvatarColor(color.value)} />)}
+          </div>
+        </div>
         <label htmlFor="playerName">YOUR PLAYER NAME</label>
         <input id="playerName" maxLength="22" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" required />
         <button className="primary-btn full" disabled={!name.trim()} onClick={createRoom}>＋ Create a room</button>
@@ -137,7 +171,7 @@ export default function App() {
       </div>
       <aside className="score-panel">
         <div className="score-heading"><div><div className="eyebrow">LIVE STANDINGS</div><h2>Scoreboard</h2></div><span className="player-count">{room.players.length} players</span></div>
-        <div className="player-list">{leaderboard.map((player, i) => <div className={`player-row ${player.id === socket.id ? "you" : ""}`} key={player.id}><span className={`rank rank-${i+1}`}>{i === 0 && player.score > 0 ? "♛" : String(i+1).padStart(2,"0")}</span><div className="player-avatar">{player.name.slice(0,1).toUpperCase()}</div><div className="player-info"><strong>{player.name}{player.id === socket.id ? " (you)" : ""}</strong><small>{player.id === room.hostId ? "HOST" : player.answered && room.status === "playing" ? "ANSWERED" : "PLAYER"}</small></div><b className="score">{player.score}</b></div>)}</div>
+        <div className="player-list">{leaderboard.map((player, i) => <div className={`player-row ${player.id === socket.id ? "you" : ""}`} key={player.id}><span className={`rank rank-${i+1}`}>{i === 0 && player.score > 0 ? "♛" : String(i+1).padStart(2,"0")}</span><div className="player-avatar" style={{ "--avatar-color": player.avatarColor || "#b9e47a" }}>{player.avatar || player.name.slice(0,1).toUpperCase()}</div><div className="player-info"><strong>{player.name}{player.id === socket.id ? " (you)" : ""}</strong><small>{player.id === room.hostId ? "HOST" : player.answered && room.status === "playing" ? "ANSWERED" : "PLAYER"}</small></div><b className="score">{player.score}</b></div>)}</div>
         <div className="score-foot"><span>✦</span> Fastest correct answer earns 100 points.</div>
       </aside>
     </section>}

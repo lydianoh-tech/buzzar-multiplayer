@@ -27,12 +27,16 @@ const questions = [
 const rooms = new Map();
 const timers = new Map();
 const cleanName = (s) => String(s || "").trim().replace(/[<>]/g, "").slice(0, 22);
+const allowedAvatars = new Set(["🦁", "🕊️", "👑", "🌟", "🦋", "🌻", "🧑🏽‍🦱", "👩🏾‍🦰", "🧔🏻", "👩🏻‍🦳", "🧑🏿‍🦲", "🐑"]);
+const allowedAvatarColors = new Set(["#b9e47a", "#f4c76b", "#7dd3fc", "#f9a8d4", "#c4b5fd", "#fda58b"]);
+const cleanAvatar = (value) => allowedAvatars.has(value) ? value : "🦁";
+const cleanAvatarColor = (value) => allowedAvatarColors.has(value) ? value : "#b9e47a";
 const publicQuestion = (q) => ({ category: q.category, question: q.question, options: q.options, reference: q.reference });
 const roomSnapshot = (room) => ({
   code: room.code, hostId: room.hostId, status: room.status, round: room.round,
   totalRounds: questions.length, question: room.status !== "lobby" && room.round < questions.length ? publicQuestion(questions[room.round]) : null,
   secondsLeft: room.secondsLeft, answerReveal: room.answerReveal,
-  players: [...room.players.values()].map(p => ({ id: p.id, name: p.name, score: p.score, answered: room.answered.has(p.id) })),
+  players: [...room.players.values()].map(p => ({ id: p.id, name: p.name, avatar: p.avatar, avatarColor: p.avatarColor, score: p.score, answered: room.answered.has(p.id) })),
   winnerId: room.winnerId
 });
 function broadcast(room) { io.to(room.code).emit("room:update", roomSnapshot(room)); }
@@ -71,19 +75,19 @@ function makeCode() {
 app.get("/health", (_req, res) => res.json({ ok: true, name: "Bible Buzz" }));
 
 io.on("connection", socket => {
-  socket.on("room:create", ({ name } = {}, ack = () => {}) => {
+  socket.on("room:create", ({ name, avatar, avatarColor } = {}, ack = () => {}) => {
     const playerName = cleanName(name);
     if (!playerName) return ack({ error: "Enter your name first." });
     const code = makeCode();
     const room = { code, hostId: socket.id, status: "lobby", round: 0, secondsLeft: ROUND_SECONDS, players: new Map(), answered: new Set(), answerReveal: null, winnerId: null };
-    room.players.set(socket.id, { id: socket.id, name: playerName, score: 0 });
+    room.players.set(socket.id, { id: socket.id, name: playerName, avatar: cleanAvatar(avatar), avatarColor: cleanAvatarColor(avatarColor), score: 0 });
     rooms.set(code, room);
     socket.join(code);
     ack({ code, state: roomSnapshot(room) });
     broadcast(room);
   });
 
-  socket.on("room:join", ({ code, name } = {}, ack = () => {}) => {
+  socket.on("room:join", ({ code, name, avatar, avatarColor } = {}, ack = () => {}) => {
     const roomCode = String(code || "").trim().toUpperCase();
     const room = rooms.get(roomCode);
     const playerName = cleanName(name);
@@ -92,7 +96,7 @@ io.on("connection", socket => {
     if (room.status !== "lobby") return ack({ error: "This game has already started." });
     if (room.players.size >= 12) return ack({ error: "This room is full (12 players maximum)." });
     if ([...room.players.values()].some(p => p.name.toLowerCase() === playerName.toLowerCase())) return ack({ error: "That name is already taken in this room." });
-    room.players.set(socket.id, { id: socket.id, name: playerName, score: 0 });
+    room.players.set(socket.id, { id: socket.id, name: playerName, avatar: cleanAvatar(avatar), avatarColor: cleanAvatarColor(avatarColor), score: 0 });
     socket.join(roomCode);
     ack({ code: roomCode, state: roomSnapshot(room) });
     broadcast(room);

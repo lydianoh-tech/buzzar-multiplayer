@@ -154,3 +154,20 @@ button, .join-card, .question-card, .score-panel, .rules-card { -webkit-tap-high
 @keyframes badge-bounce { 0%,100% { transform: translateY(2px) rotate(-12deg); } 50% { transform: translateY(-10px) rotate(12deg); } }
 @media(max-width:520px) { .winner-celebration .dance-stage { height:205px; } .winner-celebration .winner-dancer { width:140px; height:175px; } }
 @media(prefers-reduced-motion:reduce) { .dancer-left-arm,.dancer-right-arm,.dancer-left-leg,.dancer-right-leg,.dancer-head,.dancer-torso,.dancer-shadow,.dancer-name { animation:none!important; } }
+
+.round-winner-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  margin: 22px auto;
+  padding: 18px 20px;
+  max-width: 480px;
+  border: 1px solid rgba(185, 228, 122, .45);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(185, 228, 122, .13), rgba(244, 199, 107, .10));
+  text-align: center;
+}
+.round-winner-banner strong { font-size: 1.35rem; color: var(--text, #f7f4e8); }
+.round-winner-banner > span { color: var(--muted, #b8c7be); font-size: .92rem; }
+.final-round-winner { margin-top: 18px; }

@@ -56,16 +56,31 @@ const roomSnapshot = (room) => ({
   code: room.code, hostId: room.hostId, status: room.status, round: room.round,
   totalRounds: 5, totalQuestions: questions.length, question: room.status !== "lobby" && room.round < questions.length ? publicQuestion(questions[room.round]) : null,
   secondsLeft: room.secondsLeft, answerReveal: room.answerReveal,
-  players: [...room.players.values()].map(p => ({ id: p.id, name: p.name, avatar: p.avatar, avatarColor: p.avatarColor, score: p.score, answered: room.answered.has(p.id) })),
-  winnerId: room.winnerId
+  players: [...room.players.values()].map(p => ({ id: p.id, name: p.name, avatar: p.avatar, avatarColor: p.avatarColor, score: p.score, roundScore: p.roundScore || 0, answered: room.answered.has(p.id) })),
+  winnerId: room.winnerId, roundWinner: room.roundWinner || null
 });
 function broadcast(room) { io.to(room.code).emit("room:update", roomSnapshot(room)); }
 function stopTimer(code) { if (timers.has(code)) { clearInterval(timers.get(code)); timers.delete(code); } }
+function finalizeRound(room) {
+  if (room.round % 5 !== 4) return;
+  const players = [...room.players.values()];
+  const highScore = Math.max(0, ...players.map(p => p.roundScore || 0));
+  const winners = highScore > 0 ? players.filter(p => (p.roundScore || 0) === highScore) : [];
+  room.roundWinner = {
+    round: Math.floor(room.round / 5) + 1,
+    score: highScore,
+    players: winners.map(p => ({ id: p.id, name: p.name, avatar: p.avatar, avatarColor: p.avatarColor, roundScore: p.roundScore || 0 }))
+  };
+}
 function nextQuestion(room) {
   stopTimer(room.code);
   room.answered = new Set();
   room.answerReveal = null;
   room.winnerId = null;
+  if (room.round % 5 === 0) {
+    room.roundWinner = null;
+    room.players.forEach(p => { p.roundScore = 0; });
+  }
   if (room.round >= questions.length) {
     room.status = "finished";
     room.question = null;
@@ -80,6 +95,7 @@ function nextQuestion(room) {
     if (room.secondsLeft <= 0) {
       stopTimer(room.code);
       room.answerReveal = { correctIndex: questions[room.round].answer, message: "Time is up!", reference: questions[room.round].reference };
+      finalizeRound(room);
       room.status = room.round === questions.length - 1 ? "finished" : "between";
       broadcast(room);
     } else broadcast(room);
@@ -99,8 +115,8 @@ io.on("connection", socket => {
     const playerName = cleanName(name);
     if (!playerName) return ack({ error: "Enter your name first." });
     const code = makeCode();
-    const room = { code, hostId: socket.id, status: "lobby", round: 0, secondsLeft: ROUND_SECONDS, players: new Map(), answered: new Set(), answerReveal: null, winnerId: null };
-    room.players.set(socket.id, { id: socket.id, name: playerName, avatar: cleanAvatar(avatar), avatarColor: cleanAvatarColor(avatarColor), score: 0 });
+    const room = { code, hostId: socket.id, status: "lobby", round: 0, secondsLeft: ROUND_SECONDS, players: new Map(), answered: new Set(), answerReveal: null, winnerId: null, roundWinner: null };
+    room.players.set(socket.id, { id: socket.id, name: playerName, avatar: cleanAvatar(avatar), avatarColor: cleanAvatarColor(avatarColor), score: 0, roundScore: 0 });
     rooms.set(code, room);
     socket.join(code);
     ack({ code, state: roomSnapshot(room) });
@@ -116,7 +132,7 @@ io.on("connection", socket => {
     if (room.status !== "lobby") return ack({ error: "This game has already started." });
     if (room.players.size >= 12) return ack({ error: "This room is full (12 players maximum)." });
     if ([...room.players.values()].some(p => p.name.toLowerCase() === playerName.toLowerCase())) return ack({ error: "That name is already taken in this room." });
-    room.players.set(socket.id, { id: socket.id, name: playerName, avatar: cleanAvatar(avatar), avatarColor: cleanAvatarColor(avatarColor), score: 0 });
+    room.players.set(socket.id, { id: socket.id, name: playerName, avatar: cleanAvatar(avatar), avatarColor: cleanAvatarColor(avatarColor), score: 0, roundScore: 0 });
     socket.join(roomCode);
     ack({ code: roomCode, state: roomSnapshot(room) });
     broadcast(room);
@@ -129,7 +145,8 @@ io.on("connection", socket => {
     if (room.players.size < 2) return ack?.({ error: "At least two players are required." });
     if (room.status !== "lobby") return ack?.({ error: "The game has already started." });
     room.round = 0;
-    room.players.forEach(p => p.score = 0);
+    room.roundWinner = null;
+    room.players.forEach(p => { p.score = 0; p.roundScore = 0; });
     nextQuestion(room);
     ack?.({ ok: true });
   });
@@ -145,7 +162,9 @@ io.on("connection", socket => {
     if (index === q.answer && !room.winnerId) {
       room.winnerId = socket.id;
       player.score += POINTS_FOR_CORRECT;
+      player.roundScore = (player.roundScore || 0) + POINTS_FOR_CORRECT;
       room.answerReveal = { correctIndex: q.answer, message: `${player.name} was fastest with the correct answer! +${POINTS_FOR_CORRECT} points`, reference: q.reference };
+      finalizeRound(room);
       stopTimer(room.code);
       room.status = room.round === questions.length - 1 ? "finished" : "between";
       broadcast(room);

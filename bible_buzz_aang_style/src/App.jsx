@@ -185,7 +185,7 @@ export default function App() {
             {room.roundWinner.players.length ? <strong>{room.roundWinner.players.map(p => p.name).join(" & ")}</strong> : <strong>No points scored this round</strong>}
             {room.roundWinner.players.length > 0 && <span>{room.roundWinner.score} round points</span>}
           </div>}
-          {isHost ? <button className="primary-btn" onClick={nextRound}>{(room.round % 5) === 4 ? "Next round →" : "Next question →"}</button> : <div className="waiting-pill"><span className="pulse"/> Waiting for host to continue…</div>}
+          {isHost ? <button className="primary-btn" onClick={nextRound}>{(room.round % 5) === 4 ? "Next question →" : "Next question →"}</button> : <div className="waiting-pill"><span className="pulse"/> Waiting for host to continue…</div>}
         </div>}
         {room.status === "finished" && <div className="question-card result-card final-card">
           <div className="result-symbol">♛</div><div className="eyebrow">FINAL SCORE</div><h1>{leaderboard[0]?.name ? `${leaderboard[0].name} wins!` : "Game complete!"}</h1><p>Congratulations to every player who joined the challenge.</p>

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "start": "node --experimental-strip-types server/render.js",
     "test": "node --experimental-strip-types --test tests/*.test.js"
   },
   "dependencies": {

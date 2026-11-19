@@ -1,46 +1,43 @@
-# Bible Buzz — Multiplayer Bible Trivia
+# Bible Buzz — Netlify-ready multiplayer Bible trivia
 
-A responsive, real-time Bible trivia game built with React, Vite, Express, and Socket.IO. Players join the same room from separate devices using a five-character code or invite link.
+Bible Buzz keeps its existing React/Vite interface, avatar picker, live room codes, Bible questions, scoring, per-round winners, and animated final celebration. The continuously running Express/Socket.IO server has been replaced by a Netlify Function and Netlify Blobs room storage.
 
-## Rules
+## Game rules
 
 - 2–12 players per room.
-- 5 Bible trivia rounds, 20 seconds per question.
-- Each player may submit one answer per round.
-- The first correct answer received by the server earns 100 points.
-- Incorrect answers earn 0 points. If nobody answers correctly, the timer reveals the answer.
-- The player with the highest score after round 5 wins; ties share the win.
-- The host controls the start and progression between rounds.
+- Five rounds with five questions per round (25 questions total).
+- Each question stays open for up to 20 seconds.
+- Each player gets one answer per question.
+- The first correct answer earns 100 points; incorrect answers earn zero.
+- Each round announces its winner after question five. Ties share the round win.
+- The overall champion is announced after question 25.
+- The host advances the game between questions; round numbering resets at each new round.
 
-## Run locally
+## Publish with Netlify Drop
 
-Requires Node.js 20 or newer.
+1. Extract `netlify-ready-game.zip` into a folder.
+2. Sign in to Netlify and open https://app.netlify.com/drop.
+3. Drag the **whole extracted project folder** into the Drop area (not just `dist`). Netlify must run the build and package the function; a static-only upload of `dist` will not include the backend.
+4. Wait for the build and deployment to finish. Open the published site in two browsers/devices and test creating/joining a room.
 
-```bash
-npm install
-npm run dev
-```
+The project includes root-level `netlify.toml`, `package.json`, `package-lock.json`, the frontend source, and `netlify/functions/game.ts`. Netlify automatically provides the credentials needed by Netlify Blobs to a deployed Function; no database account, API key, custom environment variable, GitHub repository, or manual database provisioning is required.
 
-Open the Vite URL printed in the terminal (usually `http://localhost:5173`). For multiple devices on the same Wi-Fi, use your computer's LAN IP and make sure the firewall allows the Vite and server ports. For play across the internet, deploy the app.
+## Architecture
 
-## Deploy to Render
+- `src/App.jsx` and `src/styles.css` — existing user interface and styling.
+- `src/gameClient.js` — lightweight HTTP polling client; it calls `/.netlify/functions/game` directly.
+- `netlify/functions/game.ts` — single Netlify Function endpoint.
+- `netlify/lib/gameEngine.ts` — question bank, snapshots, scoring helpers, and round winner logic, kept outside the functions directory.
+- `netlify/lib/gameHandler.ts` — reusable request/game-state handler used by the Function and integration tests.
+- `netlify.toml` — build, publish, and functions configuration. No `config.path` or `/api/game` redirect is used.
+- `tests/game-flow.test.js` — complete three-round/two-player scoring and winner integration test.
 
-This repo includes `render.yaml`. Create a new Render Web Service from your Git repository and use the included configuration, or set:
-- Build command: `npm install && npm run build`
-- Start command: `npm start`
+The function opens a site-wide Netlify Blobs store with strong consistency. Room creation uses `onlyIfNew`; room mutations use ETag-based `onlyIfMatch` conditional writes with bounded retries. Blobs is a key/value store rather than a transactional database, so conditional writes reduce stale overwrites but are not a substitute for full multi-record transactions. Each game is stored as one room record to keep its state update atomic at the application level as far as the conditional-write API allows.
 
-The Node server serves the built frontend and Socket.IO on the same origin. Once deployment finishes, share the Render URL. The live URL does not exist until you deploy it to an account you control.
+## Testing
 
-## Project structure
+- `npm test` runs a simulated complete three-round game with two players. It verifies all 15 questions, answer scoring, round winners, the final scores, and the overall winner.
+- `npm run build` creates the production frontend bundle.
+- Netlify's build process packages `netlify/functions/game.ts` during deployment.
 
-- `src/App.jsx` — game UI and client socket events
-- `src/styles.css` — responsive styling
-- `server/index.js` — room management, question timer, scoring, server-authoritative answer validation
-- `render.yaml` — deployment configuration
-
-## Before a public launch
-
-- Test with at least two devices and browsers.
-- Consider adding reconnection support and persistent game records if desired.
-- The current game uses an in-memory room store; active rooms reset when the server restarts.
-- The question set is intentionally a starter set of five questions. Review wording and Bible references for your preferred Bible translation or audience.
+Netlify Blobs is available to deployed Functions automatically. Local execution of the real Blobs-backed endpoint requires Netlify's local development runtime; the included integration test uses an in-memory store with the same conditional-write contract and does not need credentials.

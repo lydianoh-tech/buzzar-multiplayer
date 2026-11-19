@@ -1,26 +1,23 @@
 {
-  "name": "bible-trivia-multiplayer",
-  "version": "1.0.0",
+  "name": "bible-buzz-netlify",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k \"npm:server\" \"npm:client\"",
-    "server": "node server/index.js",
-    "client": "vite --host 0.0.0.0",
+    "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "start": "node server/index.js"
+    "test": "node --experimental-strip-types --test tests/*.test.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
+    "@netlify/blobs": "^10.5.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^9.1.2",
     "vite": "^6.0.7"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
